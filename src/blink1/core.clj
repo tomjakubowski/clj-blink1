@@ -1,4 +1,5 @@
 (ns blink1.core
+  (:import thingm.blink1.Blink1)
   (:gen-class))
 
 (defn -main
