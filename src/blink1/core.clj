@@ -16,7 +16,8 @@
 
 (def ^{:private true} blink1-report-id 1)
 (def ^{:private true} blink1-buf-size 9)
-(def ^{:private true} blink1-cmd-set-rgb (first (.getBytes "n")))
+(def ^{:private true} blink1-cmd-set-rgb (byte \n))
+(def ^{:private true} blink1-cmd-fade-rgb (byte \c))
 
 (defn- write-seq [dev seq]
   (let [buflen (dec blink1-buf-size)
@@ -31,6 +32,12 @@
 (defn set-rgb [dev r g b]
   (write-seq dev [blink1-cmd-set-rgb r g b]))
 
+(defn fade-rgb [dev ms r g b]
+  (let [dms (/ ms 10)]
+    (write-seq dev [blink1-cmd-fade-rgb r g b
+                    (bit-shift-right dms 8)
+                    (mod dms 0xff)])))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
@@ -42,6 +49,7 @@
       (try
         (println (str "blink1: (" blink1 ")"))
         (set-rgb blink1 255 0 0)
+        (fade-rgb blink1 8000 0 255 0)
         (finally
           (.close blink1)
           (.release (HIDManager/getInstance)))))
