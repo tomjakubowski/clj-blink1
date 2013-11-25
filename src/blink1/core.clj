@@ -18,21 +18,18 @@
 (def ^{:private true} blink1-buf-size 9)
 (def ^{:private true} blink1-cmd-set-rgb (first (.getBytes "n")))
 
-(defn set-rgb [dev r g b]
-  (let [buflen blink1-buf-size
+(defn- write-seq [dev seq]
+  (let [buflen (dec blink1-buf-size)
         bb (ByteBuffer/allocate buflen)
         buf (byte-array buflen)]
-    (doto bb
-      (.put (.byteValue blink1-report-id))
-      (.put (.byteValue blink1-cmd-set-rgb))
-      (.put (.byteValue r))
-      (.put (.byteValue g))
-      (.put (.byteValue b))
-      (.rewind)
-      (.get buf))
-    (println (map #(bit-and % 255) (into [] buf)))
-    (.write dev buf)
-    dev))
+    (.put bb (.byteValue blink1-report-id))
+    (reduce #(.put %1 (.byteValue %2)) bb (take buflen seq))
+    (.rewind bb)
+    (.get bb buf)
+    (.write dev buf)))
+
+(defn set-rgb [dev r g b]
+  (write-seq dev [blink1-cmd-set-rgb r g b]))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -44,7 +41,7 @@
     (if-let [blink1 (open-blink1)]
       (try
         (println (str "blink1: (" blink1 ")"))
-        (set-rgb blink1 0 255 0)
+        (set-rgb blink1 255 0 0)
         (finally
           (.close blink1)
           (.release (HIDManager/getInstance)))))
@@ -52,8 +49,7 @@
       (.release (HIDManager/getInstance))
       (throw (RuntimeException. "No blink(1) device found.")))
     (finally
-      (.release (HIDManager/getInstance))))
-  (println "Hello, World!"))
+      (.release (HIDManager/getInstance)))))
 
 (comment
   (-main))
