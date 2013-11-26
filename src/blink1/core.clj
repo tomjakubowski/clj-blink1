@@ -44,7 +44,7 @@
     (if-let [blink1 (open-blink1)]
       (try
         (println (str "blink1: (" blink1 ")"))
-        (fade-rgb blink1 1000 (rand-int 255) (rand-int 255) (rand-int 255))
+        (fade-rgb blink1 1000 (rand-int 256) (rand-int 256) (rand-int 256))
         (finally
           (.close blink1)
           (.release (HIDManager/getInstance)))))
