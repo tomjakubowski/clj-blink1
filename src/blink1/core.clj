@@ -2,6 +2,7 @@
   (:import [com.codeminders.hidapi HIDDeviceInfo HIDManager HIDDeviceNotFoundException]
            [java.io IOException]
            [java.nio ByteBuffer])
+  (:require [blink1.bytes :refer [seq-to-bytes]])
   (:gen-class))
 
 (defn- load-hid-natives []
@@ -20,16 +21,11 @@
 (def ^{:private true} blink1-cmd-fade-rgb (byte \c))
 
 (defn- write-seq [dev seq]
-  (let [buflen (dec blink1-buf-size)
-        bb (ByteBuffer/allocate buflen)
-        buf (byte-array buflen)]
-    (.put bb (.byteValue blink1-report-id))
-    (reduce #(.put %1 (.byteValue %2)) bb (take buflen seq))
-    (.rewind bb)
-    (.get bb buf)
-    (.write dev buf)))
+  (let [len blink1-buf-size]
+    (.write dev (seq-to-bytes len (cons blink1-report-id seq)))))
 
 (defn set-rgb [dev r g b]
+  "Sets the color on dev."
   (write-seq dev [blink1-cmd-set-rgb r g b]))
 
 (defn fade-rgb [dev ms r g b]
